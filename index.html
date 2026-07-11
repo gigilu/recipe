@@ -1,0 +1,1164 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Chef's Pocket - YouTube AI Recipe Manager</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        body {
+            --bg-primary: #FAF8F5;
+            --bg-card: #ffffff;
+            --bg-modal: #FAF8F5;
+            --accent-gradient: linear-gradient(135deg, #E07A5F, #F4A261, #81B29A);
+            --accent-orange: #E07A5F;
+            --accent-pink: #D96B27;
+            --accent-purple: #81B29A;
+            --text-main: #4A3E3D;
+            --text-muted: #8C7D7B;
+            --text-highlight: #2A1F1E;
+            --border-color: #E6DFD5;
+            --btn-bg: #F3EFE9;
+            --btn-hover-bg: #EAE3D9;
+            --btn-text: #4A3E3D;
+            --btn-primary-shadow: rgba(224, 122, 95, 0.25);
+            --btn-primary-hover-shadow: rgba(224, 122, 95, 0.4);
+            --input-bg: #ffffff;
+            --input-text: #4A3E3D;
+            --focus-shadow: rgba(224, 122, 95, 0.2);
+            --focus-ring: rgba(224, 122, 95, 0.15);
+            --body-bg-image: radial-gradient(circle at 15% 15%, rgba(224, 122, 95, 0.06) 0px, transparent 45%), radial-gradient(circle at 85% 80%, rgba(129, 178, 154, 0.08) 0px, transparent 50%);
+            --header-bg: rgba(250, 248, 245, 0.85);
+            --card-shadow: rgba(61, 58, 53, 0.06);
+            --card-hover-shadow: rgba(61, 58, 53, 0.12);
+            --card-hover-border: #E07A5F;
+            --thumb-bg: #F3EFE9;
+            --thumb-overlay-bg: linear-gradient(to bottom, rgba(0,0,0,0) 50%, rgba(0,0,0,0.5) 100%);
+            --card-header-bg: linear-gradient(135deg, rgba(224, 122, 95, 0.08), rgba(129, 178, 154, 0.08));
+            --card-footer-bg: #FAF8F5;
+            --card-badge-bg: rgba(255, 255, 255, 0.9);
+            --card-badge-border: rgba(0, 0, 0, 0.08);
+            --badge-time-color: #B27000;
+            --badge-cal-color: #C2203F;
+            --tag-bg: rgba(129, 178, 154, 0.15);
+            --tag-text: #3D6A54;
+            --modal-shadow: rgba(61, 58, 53, 0.15);
+            --modal-close-bg: #F3EFE9;
+            --bookmarklet-bg: linear-gradient(135deg, rgba(224, 122, 95, 0.08), rgba(244, 162, 97, 0.08));
+            --bookmarklet-border: rgba(224, 122, 95, 0.3);
+            --view-desc-bg: #F3EFE9;
+            --view-section-bg: #ffffff;
+            --memo-bg: rgba(129, 178, 154, 0.12);
+            --memo-border: rgba(129, 178, 154, 0.3);
+            --memo-label-color: #3D6A54;
+            --link-color: #E07A5F;
+            --ai-section-bg: #F3EFE9;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-main);
+            min-height: 100vh;
+            background-image: var(--body-bg-image);
+            padding-bottom: 4rem;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        /* Header */
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: var(--header-bg);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--border-color);
+            padding: 1.2rem 2.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            transition: background 0.3s ease, border-color 0.3s ease;
+        }
+
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+        }
+
+        .logo-icon {
+            font-size: 2rem;
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .logo-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .search-box {
+            position: relative;
+            min-width: 280px;
+        }
+
+        .search-box input {
+            width: 100%;
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 99px;
+            padding: 0.6rem 1.2rem 0.6rem 2.5rem;
+            color: var(--input-text);
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: var(--accent-orange);
+            box-shadow: 0 0 15px var(--focus-shadow);
+        }
+
+        .search-box::before {
+            content: "🔍";
+            position: absolute;
+            left: 0.9rem;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.9rem;
+            opacity: 0.7;
+        }
+
+        .btn {
+            background: var(--btn-bg);
+            border: 1px solid var(--border-color);
+            color: var(--btn-text);
+            padding: 0.65rem 1.3rem;
+            border-radius: 99px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn:hover {
+            background: var(--btn-hover-bg);
+            transform: translateY(-2px);
+        }
+
+        .btn-primary {
+            background: var(--accent-gradient);
+            border: none;
+            color: #fff !important;
+            box-shadow: 0 8px 20px var(--btn-primary-shadow);
+        }
+
+        .btn-primary:hover {
+            box-shadow: 0 12px 28px var(--btn-primary-hover-shadow);
+        }
+
+        /* Container & Grid */
+        .main-container {
+            max-width: 1300px;
+            margin: 2.5rem auto;
+            padding: 0 1.5rem;
+        }
+
+        .stats-bar {
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: var(--text-muted);
+            font-size: 1.05rem;
+        }
+
+        .stats-count span {
+            color: var(--text-highlight);
+            font-weight: 700;
+            font-size: 1.3rem;
+        }
+
+        .recipe-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+            gap: 2rem;
+        }
+
+        /* Recipe Card */
+        .recipe-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            overflow: hidden;
+            transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            box-shadow: 0 4px 15px var(--card-shadow);
+        }
+
+        .recipe-card:hover {
+            transform: translateY(-6px);
+            border-color: var(--card-hover-border);
+            box-shadow: 0 20px 40px var(--card-hover-shadow);
+        }
+
+        .card-thumb-container {
+            width: 100%;
+            height: 210px;
+            position: relative;
+            overflow: hidden;
+            background: var(--thumb-bg);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .card-thumb {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .recipe-card:hover .card-thumb {
+            transform: scale(1.08);
+        }
+
+        .card-thumb-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--thumb-overlay-bg);
+            display: flex;
+            align-items: flex-end;
+            padding: 1rem 1.5rem;
+        }
+
+        .card-thumb-play {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.9);
+            width: 52px;
+            height: 52px;
+            background: var(--accent-orange);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.3rem;
+            opacity: 0.85;
+            box-shadow: 0 4px 15px var(--btn-primary-shadow);
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            padding-left: 3px;
+        }
+
+        .recipe-card:hover .card-thumb-play {
+            transform: translate(-50%, -50%) scale(1.1);
+            opacity: 1;
+            box-shadow: 0 8px 25px var(--btn-primary-hover-shadow);
+        }
+
+        .card-header {
+            background: var(--card-header-bg);
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .card-title {
+            font-size: 1.35rem;
+            font-weight: 700;
+            margin-bottom: 0.6rem;
+            color: var(--text-main);
+            line-height: 1.3;
+        }
+
+        .card-badges {
+            display: flex;
+            gap: 0.6rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            background: var(--card-badge-bg);
+            border: 1px solid var(--card-badge-border);
+            padding: 0.25rem 0.75rem;
+            border-radius: 99px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .badge-time { color: var(--badge-time-color); }
+        .badge-cal { color: var(--badge-cal-color); }
+
+        .card-body {
+            padding: 1.5rem;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .card-desc {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            line-height: 1.5;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .card-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.4rem;
+            margin-top: auto;
+        }
+
+        .tag-pill {
+            background: var(--tag-bg);
+            color: var(--tag-text);
+            padding: 0.2rem 0.65rem;
+            border-radius: 6px;
+            font-size: 0.78rem;
+            transition: all 0.2s ease;
+        }
+
+        .card-footer {
+            padding: 1rem 1.5rem;
+            background: var(--card-footer-bg);
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.65);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            padding: 1.5rem;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        .modal-content {
+            background: var(--bg-modal);
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            width: 100%;
+            max-width: 900px;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 2.5rem;
+            position: relative;
+            box-shadow: 0 25px 60px var(--modal-shadow);
+            animation: modalPop 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+            color: var(--text-main);
+        }
+
+        @keyframes modalPop {
+            from { transform: scale(0.95); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 1.5rem;
+            right: 1.5rem;
+            background: var(--modal-close-bg);
+            border: none;
+            color: var(--text-main);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            font-size: 1.3rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .modal-close:hover {
+            background: var(--btn-hover-bg);
+            transform: rotate(90deg);
+        }
+
+        /* Form Controls */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text-main);
+            font-size: 0.95rem;
+        }
+
+        .form-control {
+            width: 100%;
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 0.85rem 1.2rem;
+            color: var(--input-text);
+            font-size: 0.95rem;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--accent-orange);
+            box-shadow: 0 0 0 3px var(--focus-ring);
+        }
+
+        textarea.form-control {
+            min-height: 110px;
+            resize: vertical;
+            line-height: 1.6;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+
+        @media (max-width: 650px) {
+            .form-row { grid-template-columns: 1fr; }
+        }
+
+        .spinner {
+            width: 22px;
+            height: 22px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 0.8s ease-in-out infinite;
+            display: none;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Bookmarklet Box */
+        .bookmarklet-box {
+            background: var(--bookmarklet-bg);
+            border: 1px dashed var(--bookmarklet-border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            text-align: center;
+            margin: 1rem 0;
+            transition: all 0.3s ease;
+        }
+
+        .bookmarklet-btn {
+            display: inline-block;
+            background: var(--accent-gradient);
+            color: #fff !important;
+            font-weight: 700;
+            padding: 0.8rem 1.8rem;
+            border-radius: 99px;
+            text-decoration: none;
+            box-shadow: 0 8px 20px var(--btn-primary-shadow);
+            margin: 1rem 0;
+            cursor: grab;
+            transition: all 0.3s ease;
+        }
+
+        .bookmarklet-btn:hover {
+            box-shadow: 0 12px 28px var(--btn-primary-hover-shadow);
+            transform: translateY(-2px);
+        }
+
+        .video-container {
+            position: relative;
+            padding-bottom: 56.25%;
+            height: 0;
+            overflow: hidden;
+            border-radius: 16px;
+            margin-bottom: 1.5rem;
+            background: #000;
+        }
+
+        .video-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        /* 参照専用モード用スタイル */
+        body.read-only-mode .btn-primary:not(#view-yt-link), 
+        body.read-only-mode button[onclick="openBookmarkletModal()"], 
+        body.read-only-mode button[onclick="openExtractModal()"],
+        body.read-only-mode button[onclick="openEditFromView()"],
+        body.read-only-mode .stats-bar div:nth-child(2) {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo-area">
+            <span class="logo-icon">🍳</span>
+            <div>
+                <div class="logo-title">AI Chef's Pocket</div>
+                <div style="font-size: 0.8rem; color: var(--text-muted);">YouTube動画からGeminiが分量＆手順を自動抽出・ローカル管理</div>
+            </div>
+        </div>
+        <div class="header-actions">
+            <div class="search-box">
+                <input type="text" id="search-input" placeholder="レシピ名、タグ、材料で検索..." oninput="filterRecipes()">
+            </div>
+            <button class="btn" id="github-config-btn" onclick="openGithubConfigModal()" style="display: none; align-items: center; gap: 0.5rem;">⚙ 同期設定</button>
+            <button class="btn btn-primary" id="github-deploy-btn" onclick="deployToGithub()" style="display: none; align-items: center; gap: 0.5rem;">
+                <span>☁ GitHubに公開</span>
+                <div class="spinner" id="deploy-spinner" style="width:16px; height:16px; border-width:2px; margin-left:5px; display:none;"></div>
+            </button>
+            <button class="btn" onclick="openBookmarkletModal()">⭐ お気に入りボタン登録</button>
+            <button class="btn btn-primary" onclick="openExtractModal()">+ 動画からレシピ抽出</button>
+        </div>
+    </header>
+
+    <div class="main-container">
+        <div class="stats-bar">
+            <div class="stats-count">ストック中のレシピ: <span id="total-count">0</span> 件</div>
+            <div>ローカル H2 Database 永続化モード稼働中 🟢</div>
+        </div>
+
+        <div class="recipe-grid" id="recipe-grid">
+            <!-- レシピカードがここに動的に追加されます -->
+        </div>
+    </div>
+
+    <!-- 1. 動画抽出＆レシピ登録・編集モーダル -->
+    <div class="modal-overlay" id="recipe-modal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal('recipe-modal')">×</button>
+            <h2 id="modal-title" style="margin-bottom: 1.5rem; font-size: 1.6rem; color: var(--accent-orange);">✨ YouTube 動画からレシピ自動抽出</h2>
+
+            <!-- AI抽出トリガーエリア -->
+            <div id="ai-extract-section" style="background: var(--ai-section-bg); padding: 1.5rem; border-radius: 16px; margin-bottom: 2rem; border: 1px solid var(--border-color);">
+                <div class="form-group">
+                    <label for="yt-url">YouTube 動画 URL (通常またはショート動画)</label>
+                    <input type="text" id="yt-url" class="form-control" placeholder="https://www.youtube.com/watch?v=... または https://www.youtube.com/shorts/...">
+                </div>
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label for="yt-prompt">カスタム指示 (任意: 特定の分量やアレンジを重点抽出したい場合など)</label>
+                    <input type="text" id="yt-prompt" class="form-control" placeholder="例: カロリー計算の詳細と調味料の代替案も含めて要約して">
+                </div>
+                <button type="button" class="btn btn-primary" id="extract-btn" onclick="startAiExtraction()" style="width: 100%; justify-content: center;">
+                    <span>🤖 Gemini AI で動画を解析して抽出</span>
+                    <div class="spinner" id="extract-spinner"></div>
+                </button>
+            </div>
+
+            <!-- レシピ詳細・編集フォーム -->
+            <form id="recipe-form" onsubmit="saveRecipe(event)">
+                <input type="hidden" id="recipe-id">
+
+                <div class="form-group">
+                    <label for="recipe-title">料理名・レシピ名</label>
+                    <input type="text" id="recipe-title" class="form-control" required>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="recipe-time">⏱ 調理時間目安</label>
+                        <input type="text" id="recipe-time" class="form-control" placeholder="例: 約15分">
+                    </div>
+                    <div class="form-group">
+                        <label for="recipe-cal">🔥 カロリー目安</label>
+                        <input type="text" id="recipe-cal" class="form-control" placeholder="例: 約450kcal">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="recipe-ingredients">🥗 材料・分量リスト</label>
+                        <textarea id="recipe-ingredients" class="form-control" style="min-height: 160px;"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="recipe-steps">🍳 調理手順</label>
+                        <textarea id="recipe-steps" class="form-control" style="min-height: 160px;"></textarea>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="recipe-desc">💡 美味しく作るコツ・概要</label>
+                    <textarea id="recipe-desc" class="form-control" style="min-height: 90px;"></textarea>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="recipe-tags">🏷 タグ (カンマ区切り)</label>
+                        <input type="text" id="recipe-tags" class="form-control" placeholder="時短, 中華, 豚肉, おつまみ">
+                    </div>
+                    <div class="form-group">
+                        <label for="recipe-memo">📝 自分用カスタムメモ</label>
+                        <input type="text" id="recipe-memo" class="form-control" placeholder="自分のアレンジや作った感想...">
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 2rem;">
+                    <button type="button" class="btn" id="delete-btn" onclick="deleteCurrentRecipe()" style="background: rgba(239,68,68,0.2); color: #f87171; display: none;">🗑 レシピを削除</button>
+                    <button type="submit" class="btn btn-primary" id="save-btn" style="padding: 0.8rem 2.5rem;">💾 このレシピを保存する</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 2. 詳細閲覧＆動画再生モーダル -->
+    <div class="modal-overlay" id="view-modal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal('view-modal')">×</button>
+            <div id="view-video-area"></div>
+            <h2 id="view-title" style="font-size: 1.8rem; margin-bottom: 0.8rem; color: var(--text-main);"></h2>
+            <div id="view-badges" class="card-badges" style="margin-bottom: 1.5rem;"></div>
+
+            <div style="background: var(--view-desc-bg); padding: 1.2rem; border-radius: 14px; margin-bottom: 1.5rem; color: var(--text-main); font-size: 0.95rem;" id="view-desc"></div>
+
+            <div class="form-row" style="margin-bottom: 1.5rem;">
+                <div style="background: var(--view-section-bg); padding: 1.5rem; border-radius: 16px; border: 1px solid var(--border-color);">
+                    <h3 style="color: var(--accent-orange); margin-bottom: 1rem; font-size: 1.1rem;">🥗 材料と分量</h3>
+                    <div id="view-ingredients" style="white-space: pre-wrap; line-height: 1.7; color: var(--text-main);"></div>
+                </div>
+                <div style="background: var(--view-section-bg); padding: 1.5rem; border-radius: 16px; border: 1px solid var(--border-color);">
+                    <h3 style="color: var(--accent-pink); margin-bottom: 1rem; font-size: 1.1rem;">🍳 調理手順</h3>
+                    <div id="view-steps" style="white-space: pre-wrap; line-height: 1.7; color: var(--text-main);"></div>
+                </div>
+            </div>
+
+            <div id="view-memo-area" style="background: var(--memo-bg); border: 1px solid var(--memo-border); padding: 1rem 1.5rem; border-radius: 14px; margin-bottom: 1.5rem; display: none;">
+                <strong style="color: var(--memo-label-color);">📝 自分用メモ: </strong><span id="view-memo"></span>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 2rem; border-top: 1px solid var(--border-color); padding-top: 1.5rem;">
+                <a id="view-yt-link" href="#" target="_blank" style="color: var(--link-color); text-decoration: none;">🔗 元のYouTube動画をブラウザで開く ↗</a>
+                <button class="btn btn-primary" onclick="openEditFromView()">✏ レシピを編集する</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. ブックマークレット登録案内モーダル -->
+    <div class="modal-overlay" id="bookmarklet-modal">
+        <div class="modal-content" style="max-width: 650px;">
+            <button class="modal-close" onclick="closeModal('bookmarklet-modal')">×</button>
+            <h2 style="color: var(--accent-purple); margin-bottom: 1rem;">⭐ ワンクリックお気に入り登録ボタン</h2>
+            <p style="color: var(--text-muted); line-height: 1.6; margin-bottom: 1.5rem;">
+                以下のボタンをブラウザの<b>「お気に入りバー (ブックマークバー)」</b>にドラッグ＆ドロップしてください！<br>
+                YouTubeで美味しい動画を見ているときにそのボタンを1回クリックするだけで、自動で AI Chef's Pocket にURLが渡り、瞬時にレシピ自動抽出が始まります。
+            </p>
+
+            <div class="bookmarklet-box">
+                <a class="bookmarklet-btn" id="bm-link" href="javascript:(function(){window.open('http://localhost:8080/index.html?url='+encodeURIComponent(location.href),'_blank');})();" onclick="return false;">🍳 AIレシピ自動抽出</a>
+                <div style="font-size: 0.85rem; color: var(--text-muted);">↑ このボタンをお気に入りバーへドラッグ＆ドロップ ↑</div>
+            </div>
+
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 1.5rem; text-align: center;">
+                ※ Chrome拡張機能をインストールすることなく、拡張機能と同じ快適さでYouTube視聴中から1クリック保存が可能です。
+            </p>
+        </div>
+    </div>
+
+    <!-- 4. GitHub同期設定モーダル -->
+    <div class="modal-overlay" id="github-modal">
+        <div class="modal-content" style="max-width: 500px;">
+            <button class="modal-close" onclick="closeModal('github-modal')">×</button>
+            <h2 style="color: var(--accent-orange); margin-bottom: 1.5rem; font-size: 1.6rem; display: flex; align-items: center; gap: 0.5rem;">⚙ GitHub Pages 同期設定</h2>
+            
+            <form id="github-form" onsubmit="saveGithubConfig(event)">
+                <div class="form-group">
+                    <label for="gh-owner">GitHub ユーザー名 (または組織名)</label>
+                    <input type="text" id="gh-owner" class="form-control" placeholder="例: octocat" required>
+                </div>
+                <div class="form-group">
+                    <label for="gh-repo">公開用リポジトリ名</label>
+                    <input type="text" id="gh-repo" class="form-control" placeholder="例: my-recipes" required>
+                </div>
+                <div class="form-group">
+                    <label for="gh-branch">公開ブランチ名 (通常は main または gh-pages)</label>
+                    <input type="text" id="gh-branch" class="form-control" placeholder="main" required>
+                </div>
+                <div class="form-group">
+                    <label for="gh-token">GitHub アクセストークン (PAT)</label>
+                    <input type="password" id="gh-token" class="form-control" placeholder="ghp_..." required>
+                    <small style="color: var(--text-muted); display: block; margin-top: 0.4rem; line-height: 1.4;">
+                        ※ <code>contents:write</code> (または <code>repo</code>) 権限を持つパーソナルアクセストークンを入力してください。
+                    </small>
+                </div>
+                <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 2rem;">
+                    <button type="button" class="btn" onclick="closeModal('github-modal')">キャンセル</button>
+                    <button type="submit" class="btn btn-primary" style="padding: 0.8rem 2.5rem;">💾 設定を保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let allRecipes = [];
+        let currentViewRecipe = null;
+
+        function getYouTubeVideoId(url) {
+            if (!url) return null;
+            const match = url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/|youtube\.com\/shorts\/)([^"&?/\s]{11})/);
+            return match ? match[1] : null;
+        }
+
+        function getYouTubeThumbnailUrl(url) {
+            const videoId = getYouTubeVideoId(url);
+            return videoId ? `https://img.youtube.com/vi/${videoId}/hqdefault.jpg` : null;
+        }
+
+        window.onload = async () => {
+            await fetchRecipes();
+
+            // URLパラメータ (?url=...) からの自動起動トリガーを検知
+            const urlParams = new URLSearchParams(window.location.search);
+            const autoUrl = urlParams.get('url');
+            if (autoUrl) {
+                openExtractModal(autoUrl);
+                // パラメータを消したクリーンなURLに書き換える
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
+        };
+
+        async function fetchRecipes() {
+            const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+
+            if (isLocal) {
+                // ローカル環境用のボタンを表示
+                const configBtn = document.getElementById('github-config-btn');
+                const deployBtn = document.getElementById('github-deploy-btn');
+                if (configBtn) configBtn.style.display = 'flex';
+                if (deployBtn) deployBtn.style.display = 'flex';
+
+                try {
+                    const res = await fetch('/api/recipes');
+                    if (res.ok) {
+                        allRecipes = await res.json();
+                        renderRecipes(allRecipes);
+                        return;
+                    }
+                } catch (error) {
+                    console.error("ローカルAPIからのレシピ一覧取得に失敗しました。静的ファイルへのフェッチを試みます:", error);
+                }
+            }
+
+            // 静的ホスティング環境（またはローカルAPI失敗時）
+            document.body.classList.add('read-only-mode');
+            const statsBarStatus = document.querySelector('.stats-bar div:nth-child(2)');
+            if (statsBarStatus) {
+                statsBarStatus.textContent = 'GitHub Pages 参照専用モード 🟢';
+            }
+
+            try {
+                const res = await fetch('recipes.json');
+                if (res.ok) {
+                    allRecipes = await res.json();
+                    renderRecipes(allRecipes);
+                } else {
+                    throw new Error("recipes.json が見つからないか、読み込めませんでした。");
+                }
+            } catch (error) {
+                console.error("静的レシピデータのロードに失敗しました:", error);
+                const grid = document.getElementById('recipe-grid');
+                if (grid) {
+                    grid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 4rem; color: var(--text-muted);">
+                        <div style="font-size: 3rem; margin-bottom: 1rem;">⚠️</div>
+                        <h3>レシピデータの読み込みに失敗しました</h3>
+                        <p style="margin-top: 0.5rem;">recipes.json が正しく配置されているか確認してください。</p>
+                    </div>`;
+                }
+            }
+        }
+
+        function renderRecipes(recipes) {
+            const grid = document.getElementById('recipe-grid');
+            document.getElementById('total-count').textContent = recipes.length;
+            grid.innerHTML = '';
+
+            if (recipes.length === 0) {
+                grid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 4rem; color: var(--text-muted);">
+                    <div style="font-size: 3rem; margin-bottom: 1rem;">🍽</div>
+                    <h3>まだストックされたレシピがありません</h3>
+                    <p style="margin-top: 0.5rem;">右上「+ 動画からレシピ抽出」またはブックマークレットからお気に入りの動画を追加してみましょう！</p>
+                </div>`;
+                return;
+            }
+
+            recipes.forEach(recipe => {
+                const card = document.createElement('div');
+                card.className = 'recipe-card';
+                card.onclick = () => openViewModal(recipe);
+
+                // タグの生成
+                const tagsList = recipe.tags ? recipe.tags.split(',').map(t => `<span class="tag-pill">#${t.trim()}</span>`).join('') : '';
+                const thumbnailUrl = getYouTubeThumbnailUrl(recipe.youtubeUrl);
+
+                card.innerHTML = `
+                    ${thumbnailUrl ? `
+                    <div class="card-thumb-container">
+                        <img src="${thumbnailUrl}" class="card-thumb" alt="${escapeHtml(recipe.title)}" onerror="this.parentElement.style.display='none'">
+                        <div class="card-thumb-play">▶</div>
+                        <div class="card-thumb-overlay">
+                            <div class="card-badges" style="margin-bottom: 0;">
+                                ${recipe.cookingTime ? `<span class="badge badge-time">⏱ ${escapeHtml(recipe.cookingTime)}</span>` : ''}
+                                ${recipe.calories ? `<span class="badge badge-cal">🔥 ${escapeHtml(recipe.calories)}</span>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                    ` : ''}
+                    <div class="card-header" ${thumbnailUrl ? 'style="border-top: none; padding-top: 1.2rem;"' : ''}>
+                        <div class="card-title">${escapeHtml(recipe.title)}</div>
+                        ${!thumbnailUrl ? `
+                        <div class="card-badges">
+                            ${recipe.cookingTime ? `<span class="badge badge-time">⏱ ${escapeHtml(recipe.cookingTime)}</span>` : ''}
+                            ${recipe.calories ? `<span class="badge badge-cal">🔥 ${escapeHtml(recipe.calories)}</span>` : ''}
+                        </div>
+                        ` : ''}
+                    </div>
+                    <div class="card-body">
+                        <div class="card-desc">${escapeHtml(recipe.description || '要約情報なし')}</div>
+                        <div class="card-tags">${tagsList}</div>
+                    </div>
+                    <div class="card-footer">
+                        <span>📅 ${new Date(recipe.updatedAt).toLocaleDateString()}</span>
+                        <span style="color: var(--accent-orange); font-weight: 600;">詳細を見る ↗</span>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function filterRecipes() {
+            const keyword = document.getElementById('search-input').value.toLowerCase();
+            if (!keyword) {
+                renderRecipes(allRecipes);
+                return;
+            }
+            const filtered = allRecipes.filter(r => 
+                (r.title && r.title.toLowerCase().includes(keyword)) ||
+                (r.description && r.description.toLowerCase().includes(keyword)) ||
+                (r.tags && r.tags.toLowerCase().includes(keyword)) ||
+                (r.ingredients && r.ingredients.toLowerCase().includes(keyword))
+            );
+            renderRecipes(filtered);
+        }
+
+        /* Modal Operators */
+        function openExtractModal(prefilledUrl = '') {
+            document.getElementById('recipe-form').reset();
+            document.getElementById('recipe-id').value = '';
+            document.getElementById('delete-btn').style.display = 'none';
+            document.getElementById('ai-extract-section').style.display = 'block';
+            document.getElementById('modal-title').textContent = "✨ YouTube 動画からレシピ自動抽出";
+
+            if (prefilledUrl) {
+                document.getElementById('yt-url').value = prefilledUrl;
+                startAiExtraction();
+            }
+
+            document.getElementById('recipe-modal').classList.add('active');
+        }
+
+        function openEditModal(recipe) {
+            document.getElementById('recipe-id').value = recipe.id;
+            document.getElementById('recipe-title').value = recipe.title || '';
+            document.getElementById('yt-url').value = recipe.youtubeUrl || '';
+            document.getElementById('recipe-time').value = recipe.cookingTime || '';
+            document.getElementById('recipe-cal').value = recipe.calories || '';
+            document.getElementById('recipe-ingredients').value = recipe.ingredients || '';
+            document.getElementById('recipe-steps').value = recipe.steps || '';
+            document.getElementById('recipe-desc').value = recipe.description || '';
+            document.getElementById('recipe-tags').value = recipe.tags || '';
+            document.getElementById('recipe-memo').value = recipe.userMemo || '';
+
+            document.getElementById('delete-btn').style.display = 'inline-block';
+            document.getElementById('ai-extract-section').style.display = 'none';
+            document.getElementById('modal-title').textContent = "✏ レシピ情報の編集";
+
+            document.getElementById('recipe-modal').classList.add('active');
+        }
+
+        function openViewModal(recipe) {
+            currentViewRecipe = recipe;
+            document.getElementById('view-title').textContent = recipe.title;
+            document.getElementById('view-desc').textContent = recipe.description || '概要なし';
+            document.getElementById('view-ingredients').textContent = recipe.ingredients || '記載なし';
+            document.getElementById('view-steps').textContent = recipe.steps || '記載なし';
+            document.getElementById('view-yt-link').href = recipe.youtubeUrl || '#';
+
+            // バッジ
+            let badgesHtml = '';
+            if (recipe.cookingTime) badgesHtml += `<span class="badge badge-time">⏱ ${escapeHtml(recipe.cookingTime)}</span>`;
+            if (recipe.calories) badgesHtml += `<span class="badge badge-cal">🔥 ${escapeHtml(recipe.calories)}</span>`;
+            if (recipe.tags) badgesHtml += recipe.tags.split(',').map(t => `<span class="tag-pill" style="font-size:0.85rem;">#${t.trim()}</span>`).join('');
+            document.getElementById('view-badges').innerHTML = badgesHtml;
+
+            // メモ
+            if (recipe.userMemo) {
+                document.getElementById('view-memo').textContent = recipe.userMemo;
+                document.getElementById('view-memo-area').style.display = 'block';
+            } else {
+                document.getElementById('view-memo-area').style.display = 'none';
+            }
+
+            // YouTube 埋め込み動画の生成
+            const videoId = getYouTubeVideoId(recipe.youtubeUrl);
+            const videoArea = document.getElementById('view-video-area');
+            if (videoId) {
+                videoArea.innerHTML = `<div class="video-container"><iframe src="https://www.youtube.com/embed/${videoId}" allowfullscreen></iframe></div>`;
+            } else {
+                videoArea.innerHTML = '';
+            }
+
+            document.getElementById('view-modal').classList.add('active');
+        }
+
+        function openEditFromView() {
+            closeModal('view-modal');
+            openEditModal(currentViewRecipe);
+        }
+
+        function openBookmarkletModal() {
+            document.getElementById('bookmarklet-modal').classList.add('active');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+            if (modalId === 'view-modal') {
+                document.getElementById('view-video-area').innerHTML = ''; // 動画再生停止
+            }
+        }
+
+        /* AI Extraction & CRUD API */
+        async function startAiExtraction() {
+            const url = document.getElementById('yt-url').value;
+            const prompt = document.getElementById('yt-prompt').value;
+            const btn = document.getElementById('extract-btn');
+            const spinner = document.getElementById('extract-spinner');
+
+            if (!url) {
+                alert("YouTube動画のURLを入力してください。");
+                return;
+            }
+
+            btn.disabled = true;
+            spinner.style.display = 'inline-block';
+
+            try {
+                const res = await fetch('/api/recipes/extract', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ youtubeUrl: url, customPrompt: prompt })
+                });
+
+                if (!res.ok) {
+                    const errorText = await res.text();
+                    alert("抽出時にエラーが発生しました:\n" + errorText);
+                    return;
+                }
+
+                const data = await res.json();
+                // フォームに自動挿入
+                document.getElementById('recipe-title').value = data.title || '';
+                document.getElementById('recipe-time').value = data.cookingTime || '';
+                document.getElementById('recipe-cal').value = data.calories || '';
+                document.getElementById('recipe-ingredients').value = data.ingredients || '';
+                document.getElementById('recipe-steps').value = data.steps || '';
+                document.getElementById('recipe-desc').value = data.description || '';
+                document.getElementById('recipe-tags').value = data.tags || '';
+            } catch (error) {
+                alert("通信エラーが発生しました: " + error.message);
+            } finally {
+                btn.disabled = false;
+                spinner.style.display = 'none';
+            }
+        }
+
+        async function saveRecipe(event) {
+            event.preventDefault();
+            const id = document.getElementById('recipe-id').value;
+            const payload = {
+                title: document.getElementById('recipe-title').value,
+                youtubeUrl: document.getElementById('yt-url').value,
+                cookingTime: document.getElementById('recipe-time').value,
+                calories: document.getElementById('recipe-cal').value,
+                ingredients: document.getElementById('recipe-ingredients').value,
+                steps: document.getElementById('recipe-steps').value,
+                description: document.getElementById('recipe-desc').value,
+                tags: document.getElementById('recipe-tags').value,
+                userMemo: document.getElementById('recipe-memo').value
+            };
+
+            const method = id ? 'PUT' : 'POST';
+            const endpoint = id ? `/api/recipes/${id}` : '/api/recipes';
+
+            try {
+                const res = await fetch(endpoint, {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (res.ok) {
+                    closeModal('recipe-modal');
+                    await fetchRecipes();
+                } else {
+                    const errorText = await res.text();
+                    alert("保存できませんでした:\n" + (errorText || "エラーが発生しました。"));
+                }
+            } catch (error) {
+                alert("エラーが発生しました: " + error.message);
+            }
+        }
+
+        async function deleteCurrentRecipe() {
+            const id = document.getElementById('recipe-id').value;
+            if (!id || !confirm("本当にこのレシピを削除しますか？")) return;
+
+            try {
+                const res = await fetch(`/api/recipes/${id}`, { method: 'DELETE' });
+                if (res.ok) {
+                    closeModal('recipe-modal');
+                    await fetchRecipes();
+                } else {
+                    alert("削除に失敗しました。");
+                }
+            } catch (error) {
+                alert("エラー: " + error.message);
+            }
+        }
+
+        /* Utilities */
+        function extractYouTubeId(url) {
+            if (!url) return null;
+            const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=|shorts\/))([\w-]{11})/);
+            return match ? match[1] : null;
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+
+        /* GitHub Integration */
+        async function openGithubConfigModal() {
+            try {
+                const res = await fetch('/api/github/config');
+                if (res.ok) {
+                    const data = await res.json();
+                    document.getElementById('gh-owner').value = data.owner || '';
+                    document.getElementById('gh-repo').value = data.repo || '';
+                    document.getElementById('gh-branch').value = data.branch || 'main';
+                    document.getElementById('gh-token').value = data.token || '';
+                }
+            } catch (e) {
+                console.error("GitHub同期設定の取得に失敗しました:", e);
+            }
+            document.getElementById('github-modal').classList.add('active');
+        }
+
+        async function saveGithubConfig(event) {
+            event.preventDefault();
+            const payload = {
+                owner: document.getElementById('gh-owner').value.trim(),
+                repo: document.getElementById('gh-repo').value.trim(),
+                branch: document.getElementById('gh-branch').value.trim(),
+                token: document.getElementById('gh-token').value.trim()
+            };
+
+            try {
+                const res = await fetch('/api/github/config', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (res.ok) {
+                    alert("GitHub同期設定を保存しました。");
+                    closeModal('github-modal');
+                } else {
+                    const text = await res.text();
+                    alert("設定の保存に失敗しました:\n" + text);
+                }
+            } catch (e) {
+                alert("通信エラーが発生しました: " + e.message);
+            }
+        }
+
+        async function deployToGithub() {
+            if (!confirm("現在のレシピデータとWebアプリ(index.html)を GitHub Pages にデプロイしますか？\n(GitHub上のデータが更新されます)")) {
+                return;
+            }
+
+            const btn = document.getElementById('github-deploy-btn');
+            const spinner = document.getElementById('deploy-spinner');
+            btn.disabled = true;
+            spinner.style.display = 'inline-block';
+
+            try {
+                const res = await fetch('/api/github/deploy', { method: 'POST' });
+                const text = await res.text();
+                alert(text);
+            } catch (e) {
+                alert("通信エラーが発生しました: " + e.message);
+            } finally {
+                btn.disabled = false;
+                spinner.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>
