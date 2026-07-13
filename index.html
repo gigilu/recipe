@@ -101,7 +101,9 @@
             font-size: 2rem;
             background: var(--accent-gradient);
             -webkit-background-clip: text;
+            background-clip: text;
             -webkit-text-fill-color: transparent;
+            color: transparent;
         }
 
         .logo-title {
@@ -335,6 +337,7 @@
             line-height: 1.5;
             display: -webkit-box;
             -webkit-line-clamp: 3;
+            line-clamp: 3;
             -webkit-box-orient: vertical;
             overflow: hidden;
         }
@@ -546,6 +549,126 @@
         body.read-only-mode .stats-bar div:nth-child(2) {
             display: none !important;
         }
+        /* Tab Styles */
+        .tab-container {
+            display: flex;
+            border-bottom: 2px solid var(--border-color);
+            margin-bottom: 1.5rem;
+            gap: 1rem;
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s ease;
+        }
+
+        .tab-btn:hover {
+            color: var(--accent-orange);
+        }
+
+        .tab-btn.active {
+            color: var(--accent-orange);
+            border-bottom-color: var(--accent-orange);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Video upload specific placeholder thumb */
+        .card-thumb-placeholder {
+            width: 100%;
+            height: 210px;
+            background: linear-gradient(135deg, #E07A5F, #81B29A);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            position: relative;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .card-thumb-placeholder .icon {
+            font-size: 3rem;
+            margin-bottom: 0.5rem;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-6px); }
+            100% { transform: translateY(0px); }
+        }
+
+        /* Image drag & drop preview styles */
+        #image-dropzone:hover, #image-dropzone.dragover {
+            border-color: var(--accent-orange) !important;
+            background: rgba(224, 122, 95, 0.03);
+        }
+        
+        .image-preview-wrapper {
+            position: relative;
+            width: 100%;
+            padding-bottom: 100%;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            background: var(--thumb-bg);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+        }
+        
+        .image-preview-img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .image-preview-remove {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            background: rgba(0, 0, 0, 0.6);
+            color: #fff;
+            border: none;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            font-size: 1rem;
+            line-height: 20px;
+            text-align: center;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.2s ease, transform 0.2s ease;
+            z-index: 10;
+        }
+        
+        .image-preview-wrapper:hover .image-preview-remove {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+        
+        .image-preview-remove:hover {
+            background: #ef4444;
+        }
     </style>
 </head>
 <body>
@@ -587,20 +710,66 @@
     <div class="modal-overlay" id="recipe-modal">
         <div class="modal-content">
             <button class="modal-close" onclick="closeModal('recipe-modal')">×</button>
-            <h2 id="modal-title" style="margin-bottom: 1.5rem; font-size: 1.6rem; color: var(--accent-orange);">✨ YouTube 動画からレシピ自動抽出</h2>
+            <h2 id="modal-title" style="margin-bottom: 1.5rem; font-size: 1.6rem; color: var(--accent-orange);">✨ AI レシピ自動抽出</h2>
 
             <!-- AI抽出トリガーエリア -->
             <div id="ai-extract-section" style="background: var(--ai-section-bg); padding: 1.5rem; border-radius: 16px; margin-bottom: 2rem; border: 1px solid var(--border-color);">
-                <div class="form-group">
-                    <label for="yt-url">YouTube 動画 URL (通常またはショート動画)</label>
-                    <input type="text" id="yt-url" class="form-control" placeholder="https://www.youtube.com/watch?v=... または https://www.youtube.com/shorts/...">
+                <div class="tab-container">
+                    <button type="button" class="tab-btn active" id="tab-yt-btn" onclick="switchExtractTab('youtube')">🔗 YouTube リンクから抽出</button>
+                    <button type="button" class="tab-btn" id="tab-file-btn" onclick="switchExtractTab('file')">📤 動画ファイルから抽出 (20MB制限)</button>
+                    <button type="button" class="tab-btn" id="tab-image-btn" onclick="switchExtractTab('image')">📸 画像から抽出</button>
                 </div>
-                <div class="form-group" style="margin-bottom: 1rem;">
+
+                <!-- YouTube 抽出用コンテンツ -->
+                <div id="tab-youtube-content" class="tab-content active">
+                    <div class="form-group">
+                        <label for="yt-url">YouTube 動画 URL (通常またはショート動画)</label>
+                        <input type="text" id="yt-url" class="form-control" placeholder="https://www.youtube.com/watch?v=... または https://www.youtube.com/shorts/...">
+                    </div>
+                </div>
+
+                <!-- 動画ファイル抽出用コンテンツ -->
+                <div id="tab-file-content" class="tab-content">
+                    <div class="form-group">
+                        <label for="video-file">動画ファイルの選択 (MP4等, 最大 20MB)</label>
+                        <input type="file" id="video-file" class="form-control" accept="video/mp4,video/*">
+                    </div>
+                    <div class="form-group">
+                        <label for="source-url">元の参考URL (任意: Xのポストリンクなど)</label>
+                        <input type="text" id="source-url" class="form-control" placeholder="https://x.com/... などの参考URL">
+                    </div>
+                </div>
+
+                <!-- 画像抽出用コンテンツ -->
+                <div id="tab-image-content" class="tab-content">
+                    <div class="form-group">
+                        <label>画像のアップロード・貼り付け (複数可。完成した料理の画像をAIが自動判定してサムネイルにします)</label>
+                        <div id="image-dropzone" class="form-control" style="min-height: 120px; border: 2px dashed var(--border-color); display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; transition: all 0.3s ease; position: relative;">
+                            <span style="font-size: 1.8rem; margin-bottom: 0.5rem;">📋 / 📂</span>
+                            <span id="dropzone-text" style="font-size: 0.9rem; color: var(--text-muted); text-align: center;">
+                                ここをクリックして画像を選択するか、<br>
+                                ドラッグ＆ドロップ、または <b>Ctrl+V</b> で画像を貼り付け
+                            </span>
+                            <input type="file" id="image-file-input" multiple accept="image/*" style="display: none;">
+                        </div>
+                    </div>
+                    <div id="image-preview-container" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 0.8rem; margin-top: 1rem;">
+                        <!-- 画像プレビューがここに表示されます -->
+                    </div>
+                    <div class="form-group" style="margin-top: 1rem;">
+                        <label for="image-source-url">元の参考URL (任意: レシピの元ページなど)</label>
+                        <input type="text" id="image-source-url" class="form-control" placeholder="https://... などの参考URL">
+                    </div>
+                </div>
+
+                <!-- 共通カスタム指示 -->
+                <div class="form-group" style="margin-top: 1rem; margin-bottom: 1.5rem;">
                     <label for="yt-prompt">カスタム指示 (任意: 特定の分量やアレンジを重点抽出したい場合など)</label>
-                    <input type="text" id="yt-prompt" class="form-control" placeholder="例: カロリー計算の詳細と調味料の代替案も含めて要約して">
+                    <input type="text" id="yt-prompt" class="form-control" placeholder="例: 低糖質な代替案も含めて要約して">
                 </div>
+
                 <button type="button" class="btn btn-primary" id="extract-btn" onclick="startAiExtraction()" style="width: 100%; justify-content: center;">
-                    <span>🤖 Gemini AI で動画を解析して抽出</span>
+                    <span>🤖 Gemini AI で解析して抽出</span>
                     <div class="spinner" id="extract-spinner"></div>
                 </button>
             </div>
@@ -608,6 +777,7 @@
             <!-- レシピ詳細・編集フォーム -->
             <form id="recipe-form" onsubmit="saveRecipe(event)">
                 <input type="hidden" id="recipe-id">
+                <input type="hidden" id="recipe-thumbnail-url">
 
                 <div class="form-group">
                     <label for="recipe-title">料理名・レシピ名</label>
@@ -665,6 +835,19 @@
         <div class="modal-content">
             <button class="modal-close" onclick="closeModal('view-modal')">×</button>
             <div id="view-video-area"></div>
+            
+            <!-- アップロード動画用参考リンク表示 -->
+            <div id="view-source-area" style="background: var(--bookmarklet-bg); border: 1px dashed var(--bookmarklet-border); padding: 1rem 1.5rem; border-radius: 14px; margin-bottom: 1.5rem; display: none; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;">
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <span style="font-size: 1.3rem;">📱</span>
+                    <div>
+                        <strong style="color: var(--accent-orange); display: block; font-size: 0.95rem;">動画ファイルのアップロードレシピ</strong>
+                        <span style="font-size: 0.8rem; color: var(--text-muted);">元の参考URLが登録されています。</span>
+                    </div>
+                </div>
+                <a id="view-source-link" href="#" target="_blank" class="btn btn-primary" style="padding: 0.5rem 1.2rem; font-size: 0.9rem; text-decoration: none; box-shadow: none; display: inline-flex; align-items: center; gap: 0.3rem;">参考リンクを開く ↗</a>
+            </div>
+
             <h2 id="view-title" style="font-size: 1.8rem; margin-bottom: 0.8rem; color: var(--text-main);"></h2>
             <div id="view-badges" class="card-badges" style="margin-bottom: 1.5rem;"></div>
 
@@ -750,6 +933,36 @@
     <script>
         let allRecipes = [];
         let currentViewRecipe = null;
+        let activeExtractTab = 'youtube';
+        let uploadedImageFiles = [];
+
+        function switchExtractTab(tabName) {
+            activeExtractTab = tabName;
+            const tabYt = document.getElementById('tab-yt-btn');
+            const tabFile = document.getElementById('tab-file-btn');
+            const tabImage = document.getElementById('tab-image-btn');
+            const contentYt = document.getElementById('tab-youtube-content');
+            const contentFile = document.getElementById('tab-file-content');
+            const contentImage = document.getElementById('tab-image-content');
+            
+            tabYt.classList.remove('active');
+            tabFile.classList.remove('active');
+            tabImage.classList.remove('active');
+            contentYt.classList.remove('active');
+            contentFile.classList.remove('active');
+            contentImage.classList.remove('active');
+            
+            if (tabName === 'youtube') {
+                tabYt.classList.add('active');
+                contentYt.classList.add('active');
+            } else if (tabName === 'file') {
+                tabFile.classList.add('active');
+                contentFile.classList.add('active');
+            } else if (tabName === 'image') {
+                tabImage.classList.add('active');
+                contentImage.classList.add('active');
+            }
+        }
 
         function getYouTubeVideoId(url) {
             if (!url) return null;
@@ -764,6 +977,7 @@
 
         window.onload = async () => {
             await fetchRecipes();
+            initImageEvents();
 
             // URLパラメータ (?url=...) からの自動起動トリガーを検知
             const urlParams = new URLSearchParams(window.location.search);
@@ -774,6 +988,103 @@
                 window.history.replaceState({}, document.title, window.location.pathname);
             }
         };
+
+        function initImageEvents() {
+            const dropzone = document.getElementById('image-dropzone');
+            const fileInput = document.getElementById('image-file-input');
+            
+            if (!dropzone) return;
+            
+            dropzone.addEventListener('click', () => fileInput.click());
+            
+            fileInput.addEventListener('change', (e) => {
+                const files = e.target.files;
+                handleSelectedImageFiles(files);
+            });
+            
+            // ドラッグ＆ドロップ
+            dropzone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropzone.classList.add('dragover');
+            });
+            
+            dropzone.addEventListener('dragleave', () => {
+                dropzone.classList.remove('dragover');
+            });
+            
+            dropzone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropzone.classList.remove('dragover');
+                const files = e.dataTransfer.files;
+                handleSelectedImageFiles(files);
+            });
+            
+            // コピペ
+            document.addEventListener('paste', (e) => {
+                if (activeExtractTab !== 'image') return;
+                
+                const items = e.clipboardData.items;
+                let pastedAny = false;
+                for (let i = 0; i < items.length; i++) {
+                    if (items[i].type.indexOf('image') !== -1) {
+                        const blob = items[i].getAsFile();
+                        const file = new File([blob], `pasted-image-${Date.now()}-${i}.png`, { type: blob.type });
+                        handleSelectedImageFiles([file]);
+                        pastedAny = true;
+                    }
+                }
+                if (pastedAny) {
+                    e.preventDefault();
+                }
+            });
+        }
+        
+        function handleSelectedImageFiles(files) {
+            for (let i = 0; i < files.length; i++) {
+                if (files[i].type.startsWith('image/')) {
+                    uploadedImageFiles.push(files[i]);
+                }
+            }
+            renderImagePreviews();
+        }
+        
+        function removeUploadedImageFile(index) {
+            uploadedImageFiles.splice(index, 1);
+            renderImagePreviews();
+        }
+        
+        function renderImagePreviews() {
+            const container = document.getElementById('image-preview-container');
+            container.innerHTML = '';
+            
+            uploadedImageFiles.forEach((file, index) => {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'image-preview-wrapper';
+                
+                const img = document.createElement('img');
+                img.className = 'image-preview-img';
+                img.alt = file.name;
+                
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+                
+                const removeBtn = document.createElement('button');
+                removeBtn.type = 'button';
+                removeBtn.className = 'image-preview-remove';
+                removeBtn.innerHTML = '×';
+                removeBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    removeUploadedImageFile(index);
+                };
+                
+                wrapper.appendChild(img);
+                wrapper.appendChild(removeBtn);
+                container.appendChild(wrapper);
+            });
+        }
 
         async function fetchRecipes() {
             const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
@@ -846,7 +1157,7 @@
 
                 // タグの生成
                 const tagsList = recipe.tags ? recipe.tags.split(',').map(t => `<span class="tag-pill">#${t.trim()}</span>`).join('') : '';
-                const thumbnailUrl = getYouTubeThumbnailUrl(recipe.youtubeUrl);
+                const thumbnailUrl = recipe.thumbnailUrl || getYouTubeThumbnailUrl(recipe.youtubeUrl);
 
                 card.innerHTML = `
                     ${thumbnailUrl ? `
@@ -860,15 +1171,22 @@
                             </div>
                         </div>
                     </div>
-                    ` : ''}
-                    <div class="card-header" ${thumbnailUrl ? 'style="border-top: none; padding-top: 1.2rem;"' : ''}>
-                        <div class="card-title">${escapeHtml(recipe.title)}</div>
-                        ${!thumbnailUrl ? `
-                        <div class="card-badges">
-                            ${recipe.cookingTime ? `<span class="badge badge-time">⏱ ${escapeHtml(recipe.cookingTime)}</span>` : ''}
-                            ${recipe.calories ? `<span class="badge badge-cal">🔥 ${escapeHtml(recipe.calories)}</span>` : ''}
+                    ` : `
+                    <div class="card-thumb-container">
+                        <div class="card-thumb-placeholder">
+                            <span class="icon">🍳</span>
+                            <span>動画アップロードレシピ</span>
                         </div>
-                        ` : ''}
+                        <div class="card-thumb-overlay">
+                            <div class="card-badges" style="margin-bottom: 0;">
+                                ${recipe.cookingTime ? `<span class="badge badge-time">⏱ ${escapeHtml(recipe.cookingTime)}</span>` : ''}
+                                ${recipe.calories ? `<span class="badge badge-cal">🔥 ${escapeHtml(recipe.calories)}</span>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                    `}
+                    <div class="card-header" style="border-top: none; padding-top: 1.2rem;">
+                        <div class="card-title">${escapeHtml(recipe.title)}</div>
                     </div>
                     <div class="card-body">
                         <div class="card-desc">${escapeHtml(recipe.description || '要約情報なし')}</div>
@@ -904,7 +1222,22 @@
             document.getElementById('recipe-id').value = '';
             document.getElementById('delete-btn').style.display = 'none';
             document.getElementById('ai-extract-section').style.display = 'block';
-            document.getElementById('modal-title').textContent = "✨ YouTube 動画からレシピ自動抽出";
+            document.getElementById('modal-title').textContent = "✨ AI レシピ自動抽出";
+
+            // 新規追加フィールドのリセットと初期タブ切り替え
+            const videoFile = document.getElementById('video-file');
+            const sourceUrl = document.getElementById('source-url');
+            if (videoFile) videoFile.value = '';
+            if (sourceUrl) sourceUrl.value = '';
+            
+            uploadedImageFiles = [];
+            renderImagePreviews();
+            const imgSourceUrl = document.getElementById('image-source-url');
+            if (imgSourceUrl) imgSourceUrl.value = '';
+            const imgFileInput = document.getElementById('image-file-input');
+            if (imgFileInput) imgFileInput.value = '';
+            
+            switchExtractTab('youtube');
 
             if (prefilledUrl) {
                 document.getElementById('yt-url').value = prefilledUrl;
@@ -925,6 +1258,7 @@
             document.getElementById('recipe-desc').value = recipe.description || '';
             document.getElementById('recipe-tags').value = recipe.tags || '';
             document.getElementById('recipe-memo').value = recipe.userMemo || '';
+            document.getElementById('recipe-thumbnail-url').value = recipe.thumbnailUrl || '';
 
             document.getElementById('delete-btn').style.display = 'inline-block';
             document.getElementById('ai-extract-section').style.display = 'none';
@@ -939,7 +1273,6 @@
             document.getElementById('view-desc').textContent = recipe.description || '概要なし';
             document.getElementById('view-ingredients').textContent = recipe.ingredients || '記載なし';
             document.getElementById('view-steps').textContent = recipe.steps || '記載なし';
-            document.getElementById('view-yt-link').href = recipe.youtubeUrl || '#';
 
             // バッジ
             let badgesHtml = '';
@@ -956,13 +1289,36 @@
                 document.getElementById('view-memo-area').style.display = 'none';
             }
 
-            // YouTube 埋め込み動画の生成
+            // YouTube 埋め込み動画と参考リンクの生成 (フィードバック反映)
             const videoId = getYouTubeVideoId(recipe.youtubeUrl);
             const videoArea = document.getElementById('view-video-area');
+            const sourceArea = document.getElementById('view-source-area');
+            const ytLink = document.getElementById('view-yt-link');
+
             if (videoId) {
+                // YouTube動画の場合
                 videoArea.innerHTML = `<div class="video-container"><iframe src="https://www.youtube.com/embed/${videoId}" allowfullscreen></iframe></div>`;
+                sourceArea.style.display = 'none';
+                ytLink.href = recipe.youtubeUrl;
+                ytLink.textContent = "🔗 元のYouTube動画をブラウザで開く ↗";
+                ytLink.style.display = 'inline';
             } else {
+                // アップロードされた動画またはその他の場合
                 videoArea.innerHTML = '';
+                
+                // 参考URLのチェック
+                const hasValidSource = recipe.youtubeUrl && recipe.youtubeUrl.startsWith('http');
+                if (hasValidSource) {
+                    sourceArea.style.display = 'flex';
+                    document.getElementById('view-source-link').href = recipe.youtubeUrl;
+                    
+                    ytLink.href = recipe.youtubeUrl;
+                    ytLink.textContent = "🔗 元の参考リンクをブラウザで開く ↗";
+                    ytLink.style.display = 'inline';
+                } else {
+                    sourceArea.style.display = 'none';
+                    ytLink.style.display = 'none';
+                }
             }
 
             document.getElementById('view-modal').classList.add('active');
@@ -986,25 +1342,87 @@
 
         /* AI Extraction & CRUD API */
         async function startAiExtraction() {
-            const url = document.getElementById('yt-url').value;
             const prompt = document.getElementById('yt-prompt').value;
             const btn = document.getElementById('extract-btn');
             const spinner = document.getElementById('extract-spinner');
 
-            if (!url) {
-                alert("YouTube動画のURLを入力してください。");
-                return;
-            }
-
+            let res;
             btn.disabled = true;
             spinner.style.display = 'inline-block';
 
             try {
-                const res = await fetch('/api/recipes/extract', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ youtubeUrl: url, customPrompt: prompt })
-                });
+                if (activeExtractTab === 'youtube') {
+                    const url = document.getElementById('yt-url').value;
+                    if (!url) {
+                        alert("YouTube動画のURLを入力してください。");
+                        btn.disabled = false;
+                        spinner.style.display = 'none';
+                        return;
+                    }
+                    
+                    res = await fetch('/api/recipes/extract', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ youtubeUrl: url, customPrompt: prompt })
+                    });
+                } else if (activeExtractTab === 'file') {
+                    const fileInput = document.getElementById('video-file');
+                    const videoFile = fileInput.files[0];
+                    if (!videoFile) {
+                        alert("動画ファイルを選択してください。");
+                        btn.disabled = false;
+                        spinner.style.display = 'none';
+                        return;
+                    }
+
+                    // 20MB制限チェック
+                    const maxSizeBytes = 20 * 1024 * 1024;
+                    if (videoFile.size > maxSizeBytes) {
+                        alert("動画ファイルのサイズが20MBを超えています。20MB以下のファイルを選択してください。");
+                        btn.disabled = false;
+                        spinner.style.display = 'none';
+                        return;
+                    }
+
+                    const sourceUrl = document.getElementById('source-url').value;
+                    const formData = new FormData();
+                    formData.append('video', videoFile);
+                    if (sourceUrl) {
+                        formData.append('sourceUrl', sourceUrl);
+                    }
+                    if (prompt) {
+                        formData.append('customPrompt', prompt);
+                    }
+
+                    res = await fetch('/api/recipes/extract-video', {
+                        method: 'POST',
+                        body: formData
+                    });
+                } else if (activeExtractTab === 'image') {
+                    if (uploadedImageFiles.length === 0) {
+                        alert("画像ファイルをアップロードまたは貼り付けてください。");
+                        btn.disabled = false;
+                        spinner.style.display = 'none';
+                        return;
+                    }
+
+                    const sourceUrl = document.getElementById('image-source-url').value;
+                    const formData = new FormData();
+                    uploadedImageFiles.forEach(file => {
+                        formData.append('images', file);
+                    });
+                    if (sourceUrl) {
+                        formData.append('sourceUrl', sourceUrl);
+                    }
+                    if (prompt) {
+                        formData.append('customPrompt', prompt);
+                    }
+
+                    res = await fetch('/api/recipes/extract-image', {
+                        method: 'POST',
+                        body: formData
+                    });
+                }
 
                 if (!res.ok) {
                     const errorText = await res.text();
@@ -1013,6 +1431,7 @@
                 }
 
                 const data = await res.json();
+                
                 // フォームに自動挿入
                 document.getElementById('recipe-title').value = data.title || '';
                 document.getElementById('recipe-time').value = data.cookingTime || '';
@@ -1021,6 +1440,11 @@
                 document.getElementById('recipe-steps').value = data.steps || '';
                 document.getElementById('recipe-desc').value = data.description || '';
                 document.getElementById('recipe-tags').value = data.tags || '';
+                document.getElementById('recipe-thumbnail-url').value = data.thumbnailUrl || '';
+                
+                // 保存用 URL として youtubeUrl (参考URL または ダミーURL) を格納
+                document.getElementById('yt-url').value = data.youtubeUrl || '';
+                
             } catch (error) {
                 alert("通信エラーが発生しました: " + error.message);
             } finally {
@@ -1041,7 +1465,8 @@
                 steps: document.getElementById('recipe-steps').value,
                 description: document.getElementById('recipe-desc').value,
                 tags: document.getElementById('recipe-tags').value,
-                userMemo: document.getElementById('recipe-memo').value
+                userMemo: document.getElementById('recipe-memo').value,
+                thumbnailUrl: document.getElementById('recipe-thumbnail-url').value
             };
 
             const method = id ? 'PUT' : 'POST';
